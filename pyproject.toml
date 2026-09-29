@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "repo-snapshot-qa"
+version = "0.1.0"
+description = "采集 GitHub 仓库固定快照，并对仓库与 Milestone 执行自动质检"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = []
+
+[project.scripts]
+repo-snapshot-qa = "repo_snapshot_qa.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
