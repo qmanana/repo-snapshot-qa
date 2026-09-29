@@ -52,3 +52,33 @@ def write_json_report(
     payload = {name: results_to_dict(results) for name, results in stages.items()}
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return path
+
+
+def render_html(stages: dict[str, list[CheckResult]]) -> str:
+    """把各阶段结果渲染为单页 HTML 报告。"""
+    lines = [
+        "<!doctype html>",
+        "<html><head><meta charset='utf-8'><title>repo-snapshot-qa 质检报告</title></head>",
+        "<body>",
+        "<h1>repo-snapshot-qa 质检报告</h1>",
+    ]
+    for name, results in stages.items():
+        lines.append(f"<h2>{name}</h2><ul>")
+        for result in results:
+            mark = "通过" if result.passed else "未通过"
+            color = "green" if result.passed else "red"
+            lines.append(
+                f"<li style='color:{color}'><b>{result.name}</b>：{mark}（得分 {result.score:.0%}）"
+                f"<ul>{''.join(f'<li>{d}</li>' for d in result.details)}</ul></li>"
+            )
+        lines.append("</ul>")
+    lines.append("</body></html>")
+    return "\n".join(lines)
+
+
+def write_html_report(
+    path: Path, stages: dict[str, list[CheckResult]]
+) -> Path:
+    """把各阶段结果写为 HTML 文件。"""
+    path.write_text(render_html(stages), encoding="utf-8")
+    return path

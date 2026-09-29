@@ -13,7 +13,7 @@ from .checks.milestone_quality import run_milestone_quality_checks
 from .checks.repo_quality import run_repo_quality_checks
 from .history import parse_commit_history
 from .models import Milestone
-from .report import format_results, write_json_report
+from .report import format_results, write_html_report, write_json_report
 from .snapshot import capture_snapshot
 
 
@@ -65,6 +65,9 @@ def cmd_check(args: argparse.Namespace) -> int:
     if args.json:
         out = write_json_report(Path(args.json), stages)
         print(f"\nJSON 报告已写入：{out}")
+    if args.html:
+        out = write_html_report(Path(args.html), stages)
+        print(f"\nHTML 报告已写入：{out}")
     return 0
 
 
@@ -89,6 +92,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_check.add_argument("--milestones", help="里程碑定义 JSON 文件")
     p_check.add_argument("--config", help="阈值配置 JSON 文件")
     p_check.add_argument("--json", help="输出 JSON 报告的文件路径")
+    p_check.add_argument("--html", help="输出 HTML 报告的文件路径")
     p_check.set_defaults(func=cmd_check)
 
     return parser
