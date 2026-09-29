@@ -8,6 +8,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+from ..config import AdmissionConfig
 from ..models import CheckResult, CommitInfo
 from ..util import count_non_blank_lines, find_readme, iter_python_files
 
@@ -66,7 +67,11 @@ def check_parse_rate(repo_path: Path) -> CheckResult:
     return CheckResult(name="可解析率", passed=passed, score=rate, details=details)
 
 
-def check_readme(repo_path: Path) -> CheckResult:
+def check_readme(
+    repo_path: Path,
+    min_chars: int = MIN_README_CHARS,
+    min_headings: int = MIN_README_HEADINGS,
+) -> CheckResult:
     """README 基础完整性：存在、内容足够、且具备必要的章节结构。"""
     readme = find_readme(repo_path)
     if readme is None:
@@ -78,8 +83,8 @@ def check_readme(repo_path: Path) -> CheckResult:
     has_usage = any(k in text for k in ("使用", "Usage"))
 
     checks = [
-        (len(text.strip()) >= MIN_README_CHARS, f"内容长度 {len(text.strip())} 字符，要求不少于 {MIN_README_CHARS}"),
-        (len(headings) >= MIN_README_HEADINGS, f"标题数 {len(headings)}，要求不少于 {MIN_README_HEADINGS}"),
+        (len(text.strip()) >= min_chars, f"内容长度 {len(text.strip())} 字符，要求不少于 {min_chars}"),
+        (len(headings) >= min_headings, f"标题数 {len(headings)}，要求不少于 {min_headings}"),
         (has_install, "包含安装说明"),
         (has_usage, "包含使用说明"),
     ]
@@ -95,12 +100,18 @@ def check_readme(repo_path: Path) -> CheckResult:
 
 
 def run_admission_checks(
-    repo_path: Path, commits: list[CommitInfo]
+    repo_path: Path,
+    commits: list[CommitInfo],
+    config: AdmissionConfig = AdmissionConfig(),
 ) -> list[CheckResult]:
     """执行全部准入检查，返回结果列表。"""
     return [
-        check_commit_count(commits),
-        check_code_scale(repo_path),
+        check_commit_count(commits, min_commits=config.min_commits),
+        check_code_scale(repo_path, min_loc=config.min_loc),
         check_parse_rate(repo_path),
-        check_readme(repo_path),
+        check_readme(
+            repo_path,
+            min_chars=config.min_readme_chars,
+            min_headings=config.min_readme_headings,
+        ),
     ]

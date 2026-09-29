@@ -5,6 +5,7 @@ import re
 import tomllib
 from pathlib import Path
 
+from ..config import RepoQualityConfig
 from ..models import CheckResult, CommitInfo
 from ..util import find_package_root, find_readme
 
@@ -121,11 +122,13 @@ def check_commit_message_quality(
 
 
 def run_repo_quality_checks(
-    repo_path: Path, commits: list[CommitInfo]
+    repo_path: Path,
+    commits: list[CommitInfo],
+    config: RepoQualityConfig = RepoQualityConfig(),
 ) -> list[CheckResult]:
     """执行全部 Repo 质量检查。"""
     return [
-        check_subsystems(repo_path),
+        check_subsystems(repo_path, min_subsystems=config.min_subsystems),
         check_readme_consistency(repo_path),
-        check_commit_message_quality(commits),
+        check_commit_message_quality(commits, min_ratio=config.min_message_quality),
     ]

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from . import __version__
 from .checks import overall_passed
+from .config import load_config
 from .checks.admission import run_admission_checks
 from .checks.milestone_quality import run_milestone_quality_checks
 from .checks.repo_quality import run_repo_quality_checks
@@ -36,16 +37,17 @@ def cmd_check(args: argparse.Namespace) -> int:
     """对本地仓库按准入 → Repo → Milestone 顺序执行质检。"""
     repo_path = Path(args.repo)
     commits = parse_commit_history(repo_path)
+    config = load_config(args.config)
     stages: dict[str, list] = {}
 
-    admission = run_admission_checks(repo_path, commits)
+    admission = run_admission_checks(repo_path, commits, config=config.admission)
     stages["admission"] = admission
     print(format_results(admission, "准入检查"))
     if not overall_passed(admission):
         print("\n准入检查未通过，终止后续检查。")
         return 1
 
-    repo_quality = run_repo_quality_checks(repo_path, commits)
+    repo_quality = run_repo_quality_checks(repo_path, commits, config=config.repo_quality)
     stages["repo_quality"] = repo_quality
     print("\n" + format_results(repo_quality, "Repo 质量检查"))
     if not overall_passed(repo_quality):
@@ -54,7 +56,9 @@ def cmd_check(args: argparse.Namespace) -> int:
 
     if args.milestones:
         milestones = _load_milestones(args.milestones)
-        milestone_quality = run_milestone_quality_checks(milestones, commits)
+        milestone_quality = run_milestone_quality_checks(
+            milestones, commits, config=config.milestone_quality
+        )
         stages["milestone_quality"] = milestone_quality
         print("\n" + format_results(milestone_quality, "Milestone 质量检查"))
 
@@ -83,6 +87,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_check = sub.add_parser("check", help="对本地仓库执行三阶段质检")
     p_check.add_argument("repo", help="仓库路径")
     p_check.add_argument("--milestones", help="里程碑定义 JSON 文件")
+    p_check.add_argument("--config", help="阈值配置 JSON 文件")
     p_check.add_argument("--json", help="输出 JSON 报告的文件路径")
     p_check.set_defaults(func=cmd_check)
 
