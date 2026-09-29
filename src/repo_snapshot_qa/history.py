@@ -19,7 +19,7 @@ def _run_git_log(repo_path: Path, max_commits: int | None) -> str:
     cmd = ["git", "-C", str(repo_path), "log", "--numstat", f"--format={fmt}"]
     if max_commits:
         cmd += ["-n", str(max_commits)]
-    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", check=False)
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or "git log failed")
     return result.stdout

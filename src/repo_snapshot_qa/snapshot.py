@@ -25,6 +25,7 @@ def run_git(args: list[str], cwd: Path | None = None) -> str:
         cwd=cwd,
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=False,
     )
     if result.returncode != 0:
