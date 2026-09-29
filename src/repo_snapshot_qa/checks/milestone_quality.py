@@ -54,11 +54,17 @@ def _file_subsystem(path: str) -> str:
     return (parts[-1] or "").removesuffix(".py")
 
 
+_SOURCE_EXTENSIONS = (".py", ".java", ".js", ".ts", ".go", ".rs", ".c", ".cpp", ".h")
+
+
 def _subsystem_counts(commits: list[CommitInfo]) -> Counter:
-    """统计一批提交触及的各源码子系统次数。"""
+    """统计一批提交触及的各源码子系统次数（忽略文档与配置类文件）。"""
     counter: Counter = Counter()
     for commit in commits:
         for path in commit.files:
+            name = path.rsplit("/", 1)[-1]
+            if name == "__init__.py" or not name.endswith(_SOURCE_EXTENSIONS):
+                continue
             counter[_file_subsystem(path)] += 1
     return counter
 
