@@ -2,31 +2,31 @@
   {
     "title": "仓库快照采集",
     "description": "实现仓库克隆、固定 commit 与快照清单生成",
-    "start_commit": "7b32604",
-    "end_commit": "7a1c143"
+    "start_commit": "ce4d2ce48bb68d4c905cce19f977a489bdd725fd",
+    "end_commit": "60faa42b3f7de74291068022a4d2f5c8283e4fb1"
   },
   {
     "title": "提交历史解析",
     "description": "解析 git log 为结构化的提交数据",
-    "start_commit": "fb3fb8f",
-    "end_commit": "12ff1d3"
+    "start_commit": "8b358296aac521355c5ab3923bc2c55c045c7ea1",
+    "end_commit": "034b6867c1c4f0322d2c3cac689e9064e9a43755"
   },
   {
     "title": "准入检查",
     "description": "实现提交数量、代码规模、可解析率与 README 检查",
-    "start_commit": "69eb607",
-    "end_commit": "4a761a9"
+    "start_commit": "8bcdbb883bc534c2f620ebee169c2c3de42d4c15",
+    "end_commit": "0e7c990f7d135d1360570e477949960b664aa3c6"
   },
   {
     "title": "Repo 质量检查",
     "description": "实现功能子系统、README 一致性与提交说明质量检查",
-    "start_commit": "4f5c22e",
-    "end_commit": "e1e3d99"
+    "start_commit": "0cb8d4c043b84accbbc7382730469a2c932c4620",
+    "end_commit": "bee6a94b109fc1cf87e24593cd02743e52e285b0"
   },
   {
-    "title": "Milestone 质量检查与报告",
-    "description": "实现 Milestone 四维检查、报告输出与命令行入口",
-    "start_commit": "394206a",
-    "end_commit": "cf0e1e3"
+    "title": "Milestone 质量检查与交付",
+    "description": "实现 Milestone 四维检查与报告输出，串联命令行入口并完成文档收尾",
+    "start_commit": "0360e5fc7d6ecff47b57438627773e6e6f615f0c",
+    "end_commit": "f1b9864eb1776d0b7f2dc269e97a3ca0d8711cda"
   }
 ]
