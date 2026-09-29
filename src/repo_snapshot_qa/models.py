@@ -40,3 +40,13 @@ class CheckResult:
     passed: bool
     score: float
     details: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class Milestone:
+    """按业务开发顺序划分的一个里程碑，对应一段连续提交区间。"""
+
+    title: str
+    description: str
+    start_commit: str
+    end_commit: str
