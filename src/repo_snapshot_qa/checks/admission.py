@@ -9,52 +9,12 @@ import ast
 from pathlib import Path
 
 from ..models import CheckResult, CommitInfo
+from ..util import count_non_blank_lines, find_readme, iter_python_files
 
 MIN_COMMITS = 10
 MIN_LOC = 200
 MIN_README_CHARS = 200
 MIN_README_HEADINGS = 3
-
-# 遍历时跳过的目录，避免把依赖或构建产物计入代码规模。
-_SKIP_DIRS = {
-    ".git",
-    "venv",
-    ".venv",
-    "__pycache__",
-    "node_modules",
-    "dist",
-    "build",
-    "site-packages",
-    ".tox",
-    ".mypy_cache",
-    ".pytest_cache",
-}
-
-_README_CANDIDATES = ("README.md", "README.rst", "README.txt", "readme.md")
-
-
-def _iter_python_files(repo_path: Path):
-    for path in repo_path.rglob("*.py"):
-        if any(part in _SKIP_DIRS for part in path.parts):
-            continue
-        yield path
-
-
-def _count_non_blank_lines(path: Path) -> int:
-    total = 0
-    with path.open(encoding="utf-8", errors="ignore") as fh:
-        for line in fh:
-            if line.strip():
-                total += 1
-    return total
-
-
-def _find_readme(repo_path: Path) -> Path | None:
-    for name in _README_CANDIDATES:
-        candidate = repo_path / name
-        if candidate.exists():
-            return candidate
-    return None
 
 
 def check_commit_count(commits: list[CommitInfo], min_commits: int = MIN_COMMITS) -> CheckResult:
@@ -72,8 +32,8 @@ def check_commit_count(commits: list[CommitInfo], min_commits: int = MIN_COMMITS
 
 def check_code_scale(repo_path: Path, min_loc: int = MIN_LOC) -> CheckResult:
     """代码规模：统计 Python 源文件数与有效代码行数。"""
-    files = list(_iter_python_files(repo_path))
-    loc = sum(_count_non_blank_lines(p) for p in files)
+    files = list(iter_python_files(repo_path))
+    loc = sum(count_non_blank_lines(p) for p in files)
     passed = loc >= min_loc
     score = min(loc / min_loc, 1.0)
     return CheckResult(
@@ -86,7 +46,7 @@ def check_code_scale(repo_path: Path, min_loc: int = MIN_LOC) -> CheckResult:
 
 def check_parse_rate(repo_path: Path) -> CheckResult:
     """可解析率：用 ast 解析全部 Python 源文件，要求 100% 可解析。"""
-    files = list(_iter_python_files(repo_path))
+    files = list(iter_python_files(repo_path))
     if not files:
         return CheckResult(name="可解析率", passed=False, score=0.0, details=["未发现 Python 源文件"])
 
@@ -108,7 +68,7 @@ def check_parse_rate(repo_path: Path) -> CheckResult:
 
 def check_readme(repo_path: Path) -> CheckResult:
     """README 基础完整性：存在、内容足够、且具备必要的章节结构。"""
-    readme = _find_readme(repo_path)
+    readme = find_readme(repo_path)
     if readme is None:
         return CheckResult(name="README 完整性", passed=False, score=0.0, details=["未找到 README 文件"])
 
