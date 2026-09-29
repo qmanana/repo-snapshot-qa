@@ -24,9 +24,15 @@
     "end_commit": "bee6a94b109fc1cf87e24593cd02743e52e285b0"
   },
   {
-    "title": "Milestone 质量检查与交付",
-    "description": "实现 Milestone 四维检查与报告输出，串联命令行入口并完成文档收尾",
+    "title": "Milestone 质量检查",
+    "description": "实现聚合性、需求可验证性、代码覆盖与拆分粒度检查",
     "start_commit": "0360e5fc7d6ecff47b57438627773e6e6f615f0c",
-    "end_commit": "f1b9864eb1776d0b7f2dc269e97a3ca0d8711cda"
+    "end_commit": "aed470dce8191f46a1095f85cbf1733967835954"
+  },
+  {
+    "title": "报告输出、CLI 编排与交付",
+    "description": "实现报告输出与命令行入口，串联三阶段质检并完成配置化、CI 与交付",
+    "start_commit": "9b11a0117498d91f298afc92d7af7cce140f1934",
+    "end_commit": "deb0be6d5065bff156bc2f2db912f4ebea3f79bf"
   }
 ]
