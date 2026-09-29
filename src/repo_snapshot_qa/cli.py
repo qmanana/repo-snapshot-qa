@@ -11,7 +11,7 @@ from .config import load_config
 from .checks.admission import run_admission_checks
 from .checks.milestone_quality import run_milestone_quality_checks
 from .checks.repo_quality import run_repo_quality_checks
-from .history import parse_commit_history
+from .history import is_git_repo, parse_commit_history
 from .models import Milestone
 from .report import format_results, write_html_report, write_json_report
 from .snapshot import capture_snapshot
@@ -36,6 +36,9 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
 def cmd_check(args: argparse.Namespace) -> int:
     """对本地仓库按准入 → Repo → Milestone 顺序执行质检。"""
     repo_path = Path(args.repo)
+    if not is_git_repo(repo_path):
+        print(f"错误：{args.repo} 不是 git 仓库目录，无法执行质检。")
+        return 1
     commits = parse_commit_history(repo_path)
     config = load_config(args.config)
     stages: dict[str, list] = {}

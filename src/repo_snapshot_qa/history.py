@@ -64,3 +64,15 @@ def parse_commit_history(
                 current["files"].append(parts[2])
 
     return [CommitInfo(**c) for c in commits]
+
+
+def is_git_repo(repo_path: Path) -> bool:
+    """判断目录是否是一个 git 仓库。"""
+    result = subprocess.run(
+        ["git", "-C", str(repo_path), "rev-parse", "--is-inside-work-tree"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
+    return result.returncode == 0 and result.stdout.strip() == "true"
