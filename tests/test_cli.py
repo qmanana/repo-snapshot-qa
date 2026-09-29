@@ -1,9 +1,12 @@
 """cli（命令行入口）模块的单元测试。"""
 from __future__ import annotations
 
+import json
 import subprocess
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 
 from repo_snapshot_qa.cli import _load_milestones, main
@@ -59,6 +62,25 @@ class CliTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             code = main(["check", tmp])
             self.assertEqual(code, 1)
+
+    def test_check_format_json_no_fail_fast(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            repo = base / "repo"
+            repo.mkdir()
+            _git(repo, "init", "-b", "main")
+            (repo / "a.py").write_text("x = 1\n", encoding="utf-8")
+            _git(repo, "add", "a.py")
+            _git(repo, "commit", "-m", "feat: add a.py")
+
+            buf = StringIO()
+            with redirect_stdout(buf):
+                code = main(["check", str(repo), "--no-fail-fast", "--format", "json"])
+            data = json.loads(buf.getvalue())
+            self.assertIn("admission", data)
+            self.assertIn("health", data)
+            self.assertIn("summary", data)
+            self.assertEqual(code, 1)  # 单提交仓库不满足准入
 
 
 if __name__ == "__main__":

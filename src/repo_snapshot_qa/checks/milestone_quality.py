@@ -8,6 +8,7 @@ from __future__ import annotations
 from collections import Counter
 
 from ..config import MilestoneQualityConfig
+from ..languages import is_source_path
 from ..models import CheckResult, CommitInfo, Milestone
 
 MIN_DESC_CHARS = 8
@@ -33,6 +34,11 @@ def _commits_in_range(
     return commits[lo : hi + 1]
 
 
+def _stem(name: str) -> str:
+    """去掉文件名扩展名；无扩展名时原样返回。"""
+    return name.rsplit(".", 1)[0] if "." in name else name
+
+
 def _file_subsystem(path: str) -> str:
     """把文件路径归一到它所属的源码子系统。
 
@@ -44,17 +50,14 @@ def _file_subsystem(path: str) -> str:
     if "src" in parts:
         idx = parts.index("src")
         if idx + 2 < len(parts):
-            return parts[idx + 2].removesuffix(".py")
+            return _stem(parts[idx + 2])
         if idx + 1 < len(parts):
-            return parts[idx + 1].removesuffix(".py")
+            return _stem(parts[idx + 1])
     if "tests" in parts:
         idx = parts.index("tests")
         if idx + 1 < len(parts):
-            return parts[idx + 1].removesuffix(".py")
-    return (parts[-1] or "").removesuffix(".py")
-
-
-_SOURCE_EXTENSIONS = (".py", ".java", ".js", ".ts", ".go", ".rs", ".c", ".cpp", ".h")
+            return _stem(parts[idx + 1])
+    return _stem(parts[-1] or "")
 
 
 def _subsystem_counts(commits: list[CommitInfo]) -> Counter:
@@ -62,8 +65,7 @@ def _subsystem_counts(commits: list[CommitInfo]) -> Counter:
     counter: Counter = Counter()
     for commit in commits:
         for path in commit.files:
-            name = path.rsplit("/", 1)[-1]
-            if name == "__init__.py" or not name.endswith(_SOURCE_EXTENSIONS):
+            if not is_source_path(path):
                 continue
             counter[_file_subsystem(path)] += 1
     return counter
@@ -140,7 +142,7 @@ def check_coverage(
     unique = set(covered)
     overlap = len(covered) - len(unique)
     missing = len(set(all_shas) - unique)
-    score = max(0.0, (len(unique) - overlap) / len(all_shas))
+    score = len(unique) / len(all_shas)
     passed = missing == 0 and overlap == 0
     return CheckResult(
         "代码覆盖",

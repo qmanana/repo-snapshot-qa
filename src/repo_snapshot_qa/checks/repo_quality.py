@@ -6,8 +6,9 @@ import tomllib
 from pathlib import Path
 
 from ..config import RepoQualityConfig
+from ..languages import is_code_file
 from ..models import CheckResult, CommitInfo
-from ..util import find_package_root, find_readme
+from ..util import SKIP_DIRS, find_package_root, find_readme
 
 MIN_SUBSYSTEMS = 3
 MIN_MESSAGE_QUALITY = 0.8
@@ -19,15 +20,29 @@ _CONVENTIONAL_RE = re.compile(
 
 
 def detect_subsystems(repo_path: Path) -> list[str]:
-    """识别功能子系统：源码包下的顶层模块与子包。"""
+    """识别功能子系统。
+
+    Python 仓库走源码包根目录的模块/子包划分；其余语言回退为「仓库顶层
+    含代码文件的目录 + 顶层代码文件」。
+    """
     root = find_package_root(repo_path)
-    if root is None:
-        return []
-    subsystems: list[str] = []
-    for child in sorted(root.iterdir()):
-        if child.is_dir() and (child / "__init__.py").exists():
-            subsystems.append(child.name)
-        elif child.suffix == ".py" and child.stem != "__init__":
+    if root is not None:
+        subsystems: list[str] = []
+        for child in sorted(root.iterdir()):
+            if child.is_dir() and (child / "__init__.py").exists():
+                subsystems.append(child.name)
+            elif child.is_file() and is_code_file(child) and child.stem != "__init__":
+                subsystems.append(child.stem)
+        return subsystems
+
+    subsystems = []
+    for child in sorted(repo_path.iterdir()):
+        if child.name.startswith(".") or child.name in SKIP_DIRS:
+            continue
+        if child.is_dir():
+            if any(is_code_file(p) for p in child.rglob("*") if p.is_file()):
+                subsystems.append(child.name)
+        elif child.is_file() and is_code_file(child):
             subsystems.append(child.stem)
     return subsystems
 

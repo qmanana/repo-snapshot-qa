@@ -55,6 +55,23 @@ class AdmissionTest(unittest.TestCase):
         self.assertEqual(result.score, 0.5)
         self.assertTrue(any("bad.py" in d for d in result.details))
 
+    def test_code_scale_counts_other_languages(self) -> None:
+        (self.repo / "a.js").write_text("// comment\nconst a = 1;\n", encoding="utf-8")
+        self.assertTrue(check_code_scale(self.repo, min_loc=1).passed)
+
+    def test_parse_rate_ignores_unsupported(self) -> None:
+        (self.repo / "good.py").write_text("x = 1\n", encoding="utf-8")
+        (self.repo / "a.sh").write_text("echo hi\n", encoding="utf-8")
+        result = check_parse_rate(self.repo)
+        self.assertTrue(result.passed)
+        self.assertEqual(result.score, 1.0)
+
+    def test_parse_rate_no_checkable(self) -> None:
+        (self.repo / "a.sh").write_text("echo hi\n", encoding="utf-8")
+        result = check_parse_rate(self.repo)
+        self.assertFalse(result.passed)
+        self.assertEqual(result.score, 0.0)
+
     def test_readme_missing(self) -> None:
         self.assertFalse(check_readme(self.repo).passed)
 

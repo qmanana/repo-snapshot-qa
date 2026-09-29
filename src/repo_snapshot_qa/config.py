@@ -31,12 +31,23 @@ class MilestoneQualityConfig:
 
 
 @dataclass
+class HealthConfig:
+    min_test_ratio: float = 0.05
+    max_todo_per_file: int = 10
+    min_authors: int = 2
+    bus_factor_min: int = 2
+    hotspot_top_n: int = 5
+    max_file_loc: int = 500
+
+
+@dataclass
 class Config:
-    """三阶段质检的完整配置。"""
+    """四阶段质检的完整配置。"""
 
     admission: AdmissionConfig = field(default_factory=AdmissionConfig)
     repo_quality: RepoQualityConfig = field(default_factory=RepoQualityConfig)
     milestone_quality: MilestoneQualityConfig = field(default_factory=MilestoneQualityConfig)
+    health: HealthConfig = field(default_factory=HealthConfig)
 
 
 DEFAULT_CONFIG = Config()
@@ -51,7 +62,7 @@ def load_config(path: str | Path | None) -> Config:
         return DEFAULT_CONFIG
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     config = Config()
-    for section in ("admission", "repo_quality", "milestone_quality"):
+    for section in ("admission", "repo_quality", "milestone_quality", "health"):
         if section in data:
             target = getattr(config, section)
             for key, value in data[section].items():

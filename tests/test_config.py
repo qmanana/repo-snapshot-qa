@@ -33,6 +33,19 @@ class ConfigTest(unittest.TestCase):
         config = load_config(None)
         self.assertEqual(config.admission.min_commits, 10)
 
+    def test_health_config_default(self) -> None:
+        config = Config()
+        self.assertEqual(config.health.min_test_ratio, 0.05)
+        self.assertEqual(config.health.max_file_loc, 500)
+
+    def test_load_config_health_override(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "config.json"
+            path.write_text('{"health": {"max_file_loc": 100}}', encoding="utf-8")
+            config = load_config(path)
+            self.assertEqual(config.health.max_file_loc, 100)
+            self.assertEqual(config.health.min_test_ratio, 0.05)
+
 
 if __name__ == "__main__":
     unittest.main()

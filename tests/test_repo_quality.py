@@ -1,6 +1,7 @@
 """repo_quality（Repo 质量检查）模块的单元测试。"""
 from __future__ import annotations
 
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -47,6 +48,15 @@ class RepoQualityTest(unittest.TestCase):
     def test_subsystems_too_few(self) -> None:
         (self.pkg / "a.py").write_text("x = 1\n", encoding="utf-8")
         self.assertFalse(check_subsystems(self.repo).passed)
+
+    def test_subsystems_fallback_non_python(self) -> None:
+        shutil.rmtree(self.repo / "src")
+        (self.repo / "lib").mkdir()
+        (self.repo / "lib" / "a.js").write_text("// x\n", encoding="utf-8")
+        (self.repo / "index.js").write_text("// x\n", encoding="utf-8")
+        subs = detect_subsystems(self.repo)
+        self.assertIn("lib", subs)
+        self.assertIn("index", subs)
 
     def test_readme_consistency_pass(self) -> None:
         (self.repo / "pyproject.toml").write_text(

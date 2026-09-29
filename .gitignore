@@ -16,3 +16,7 @@ htmlcov/
 .vscode/
 *.log
 .DS_Store
+snapshot/
+snapshots/
+report.html
+report.json

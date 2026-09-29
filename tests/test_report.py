@@ -9,7 +9,9 @@ from pathlib import Path
 from repo_snapshot_qa.models import CheckResult
 from repo_snapshot_qa.report import (
     format_results,
+    render_html,
     results_to_dict,
+    summarize,
     write_html_report,
     write_json_report,
 )
@@ -47,6 +49,26 @@ class ReportTest(unittest.TestCase):
             content = path.read_text(encoding="utf-8")
             self.assertIn("<html>", content)
             self.assertIn("提交数量", content)
+
+    def test_json_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "report.json"
+            write_json_report(path, {"admission": self.results})
+            data = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(data["summary"]["total"], 2)
+            self.assertEqual(data["summary"]["passed"], 1)
+            self.assertEqual(len(data["summary"]["failed"]), 1)
+
+    def test_summarize(self) -> None:
+        text = summarize({"admission": self.results})
+        self.assertIn("1/2", text)
+        self.assertIn("可解析率", text)
+
+    def test_html_escapes_details(self) -> None:
+        results = [CheckResult("X", False, 0.0, ["<script>alert(1)</script>"])]
+        output = render_html({"admission": results})
+        self.assertNotIn("<script>alert", output)
+        self.assertIn("&lt;script&gt;", output)
 
 
 if __name__ == "__main__":
