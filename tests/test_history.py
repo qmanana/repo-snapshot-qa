@@ -55,8 +55,10 @@ class HistoryTest(unittest.TestCase):
         self.assertEqual(latest.files_changed, 2)
         self.assertEqual(latest.insertions, 3)
         self.assertEqual(latest.deletions, 0)
+        self.assertEqual(set(latest.files), {"a.txt", "b.txt"})
         self.assertEqual(commits[1].files_changed, 1)
         self.assertEqual(commits[1].insertions, 3)
+        self.assertEqual(commits[1].files, ["a.txt"])
 
     def test_max_commits(self) -> None:
         commits = parse_commit_history(self.repo, max_commits=1)

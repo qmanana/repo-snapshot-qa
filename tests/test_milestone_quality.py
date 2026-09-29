@@ -14,20 +14,24 @@ from repo_snapshot_qa.checks.milestone_quality import (
 from repo_snapshot_qa.models import CommitInfo, Milestone
 
 
-def _commit(sha: str, message: str) -> CommitInfo:
+def _commit(sha: str, message: str, files: list[str] | None = None) -> CommitInfo:
     return CommitInfo(
         sha=sha,
         author_name="Test",
         author_email="test@example.com",
         date="2026-01-01T00:00:00+00:00",
         message=message,
+        files=files or [],
     )
 
 
 def _history() -> list[CommitInfo]:
-    """9 条提交，倒序（最新在前）：c8..c0，按 scope 分成 a/b/c 三段。"""
-    scopes = {0: "a", 1: "a", 2: "a", 3: "b", 4: "b", 5: "b", 6: "c", 7: "c", 8: "c"}
-    return [_commit(f"c{i}", f"feat({scopes[i]}): 任务 {i}") for i in range(8, -1, -1)]
+    """9 条提交，倒序（最新在前）：c8..c0，按子系统 a/b/c 分成三段。"""
+    modules = {0: "a", 1: "a", 2: "a", 3: "b", 4: "b", 5: "b", 6: "c", 7: "c", 8: "c"}
+    commits = []
+    for i in range(8, -1, -1):
+        commits.append(_commit(f"c{i}", f"feat({modules[i]}): 任务 {i}", files=[f"src/pkg/module_{modules[i]}.py"]))
+    return commits
 
 
 def _milestones() -> list[Milestone]:
@@ -53,6 +57,13 @@ class MilestoneQualityTest(unittest.TestCase):
             Milestone("m3", "太短", start_commit="c6", end_commit="c8"),
         ]
         self.assertFalse(check_cohesion(bad, _history()).passed)
+
+    def test_cohesion_detects_mixed_subsystems(self) -> None:
+        # 一个里程碑横跨 a/b/c 三个子系统，文件主题集中度 1/3，低于阈值，聚合性不通过。
+        mixed = [
+            Milestone("跨模块收尾", "实现三个模块的整体收尾工作", start_commit="c0", end_commit="c8"),
+        ]
+        self.assertFalse(check_cohesion(mixed, _history()).passed)
 
     def test_verifiability(self) -> None:
         self.assertTrue(check_verifiability(_milestones(), _history()).passed)
