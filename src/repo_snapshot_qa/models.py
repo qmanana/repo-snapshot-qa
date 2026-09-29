@@ -30,6 +30,7 @@ class CommitInfo:
     files_changed: int = 0
     insertions: int = 0
     deletions: int = 0
+    files: list[str] = field(default_factory=list)
 
 
 @dataclass
