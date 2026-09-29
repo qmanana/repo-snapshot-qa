@@ -1,0 +1,32 @@
+[
+  {
+    "title": "仓库快照采集",
+    "description": "实现仓库克隆、固定 commit 与快照清单生成",
+    "start_commit": "7b32604",
+    "end_commit": "7a1c143"
+  },
+  {
+    "title": "提交历史解析",
+    "description": "解析 git log 为结构化的提交数据",
+    "start_commit": "fb3fb8f",
+    "end_commit": "12ff1d3"
+  },
+  {
+    "title": "准入检查",
+    "description": "实现提交数量、代码规模、可解析率与 README 检查",
+    "start_commit": "69eb607",
+    "end_commit": "4a761a9"
+  },
+  {
+    "title": "Repo 质量检查",
+    "description": "实现功能子系统、README 一致性与提交说明质量检查",
+    "start_commit": "4f5c22e",
+    "end_commit": "e1e3d99"
+  },
+  {
+    "title": "Milestone 质量检查与报告",
+    "description": "实现 Milestone 四维检查、报告输出与命令行入口",
+    "start_commit": "394206a",
+    "end_commit": "cf0e1e3"
+  }
+]
