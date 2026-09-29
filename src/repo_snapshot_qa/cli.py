@@ -25,7 +25,7 @@ def _load_milestones(path: str) -> list[Milestone]:
 def cmd_snapshot(args: argparse.Namespace) -> int:
     """克隆仓库并固定到指定 commit，生成快照清单。"""
     _, manifest = capture_snapshot(
-        args.url, Path(args.dest), ref=args.ref, commit_sha=args.commit
+        args.url, Path(args.dest), ref=args.ref, commit_sha=args.commit, depth=args.depth
     )
     print(f"快照已生成：{manifest.commit_sha[:8]} @ {manifest.branch}")
     print(f"清单文件：{args.dest}/snapshot.json")
@@ -77,6 +77,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_snap.add_argument("-d", "--dest", required=True, help="克隆目标目录")
     p_snap.add_argument("-r", "--ref", help="分支或标签")
     p_snap.add_argument("-c", "--commit", help="固定到的 commit sha")
+    p_snap.add_argument("--depth", type=int, help="浅克隆深度（仅拉取最近 N 条历史）")
     p_snap.set_defaults(func=cmd_snapshot)
 
     p_check = sub.add_parser("check", help="对本地仓库执行三阶段质检")

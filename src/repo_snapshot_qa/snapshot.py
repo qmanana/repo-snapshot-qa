@@ -34,10 +34,17 @@ def run_git(args: list[str], cwd: Path | None = None) -> str:
     return result.stdout.strip()
 
 
-def clone_repo(repo_url: str, dest: Path, ref: str | None = None) -> Path:
-    """把仓库克隆到 dest 目录，返回该目录路径。"""
+def clone_repo(
+    repo_url: str, dest: Path, ref: str | None = None, depth: int | None = None
+) -> Path:
+    """把仓库克隆到 dest 目录，返回该目录路径。
+
+    depth 不为 None 时执行浅克隆，仅拉取最近 depth 条历史，可显著加速大仓库采集。
+    """
     dest.mkdir(parents=True, exist_ok=True)
     cmd = ["clone"]
+    if depth:
+        cmd += ["--depth", str(depth)]
     if ref:
         cmd += ["--branch", ref]
     cmd += [repo_url, str(dest)]
@@ -84,9 +91,10 @@ def capture_snapshot(
     ref: str | None = None,
     commit_sha: str | None = None,
     manifest_path: Path | None = None,
+    depth: int | None = None,
 ) -> tuple[Path, SnapshotManifest]:
     """一站式快照采集：克隆 → 固定 commit → 写清单，返回 (仓库路径, 清单)。"""
-    repo_path = clone_repo(repo_url, dest, ref=ref)
+    repo_path = clone_repo(repo_url, dest, ref=ref, depth=depth)
     if commit_sha:
         freeze_commit(repo_path, commit_sha)
     sha = current_commit(repo_path)
