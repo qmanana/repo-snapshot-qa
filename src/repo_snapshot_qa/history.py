@@ -52,6 +52,7 @@ def parse_commit_history(
                 "files_changed": 0,
                 "insertions": 0,
                 "deletions": 0,
+                "files": [],
             }
             commits.append(current)
         elif line and current is not None:
@@ -60,5 +61,6 @@ def parse_commit_history(
                 current["files_changed"] += 1
                 current["insertions"] += int(parts[0])
                 current["deletions"] += int(parts[1])
+                current["files"].append(parts[2])
 
     return [CommitInfo(**c) for c in commits]
