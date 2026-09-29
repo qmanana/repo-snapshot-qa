@@ -55,6 +55,11 @@ class CliTest(unittest.TestCase):
             self.assertTrue(manifest.exists())
             self.assertIn(expected_sha[:8], manifest.read_text(encoding="utf-8"))
 
+    def test_check_non_git_dir(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            code = main(["check", tmp])
+            self.assertEqual(code, 1)
+
 
 if __name__ == "__main__":
     unittest.main()
