@@ -14,6 +14,7 @@ def _git(repo: Path, *args: str) -> str:
         ["git", "-C", str(repo), "-c", "user.name=Test", "-c", "user.email=test@example.com", *args],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=True,
     )
     return result.stdout.strip()
@@ -61,6 +62,13 @@ class HistoryTest(unittest.TestCase):
         commits = parse_commit_history(self.repo, max_commits=1)
         self.assertEqual(len(commits), 1)
         self.assertEqual(commits[0].message, "feat: extend a.txt and add b.txt")
+
+    def test_parse_chinese_message(self) -> None:
+        (self.repo / "c.txt").write_text("x\n", encoding="utf-8")
+        _git(self.repo, "add", "c.txt")
+        _git(self.repo, "commit", "-m", "feat: 新增中文说明")
+        commits = parse_commit_history(self.repo, max_commits=1)
+        self.assertEqual(commits[0].message, "feat: 新增中文说明")
 
 
 if __name__ == "__main__":

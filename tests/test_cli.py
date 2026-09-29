@@ -14,6 +14,7 @@ def _git(repo: Path, *args: str) -> str:
         ["git", "-C", str(repo), "-c", "user.name=Test", "-c", "user.email=test@example.com", *args],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=True,
     )
     return result.stdout.strip()
