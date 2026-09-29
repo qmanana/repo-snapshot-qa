@@ -5,7 +5,6 @@
 """
 from __future__ import annotations
 
-import re
 from collections import Counter
 
 from ..models import CheckResult, CommitInfo, Milestone
@@ -22,9 +21,6 @@ _GOAL_KEYWORDS = (
     "报告", "识别", "完成", "构建", "划分", "克隆",
 )
 
-_SCOPE_RE = re.compile(r"^\w+\(([^)]*)\):")
-
-
 def _commits_in_range(
     commits: list[CommitInfo], milestone: Milestone
 ) -> list[CommitInfo]:
@@ -36,16 +32,40 @@ def _commits_in_range(
     return commits[lo : hi + 1]
 
 
-def _scope_of(commit: CommitInfo) -> str:
-    """提取 Conventional Commits 中的 scope，如 feat(snapshot) -> snapshot。"""
-    match = _SCOPE_RE.match(commit.message)
-    return match.group(1) if match else ""
+def _file_subsystem(path: str) -> str:
+    """把文件路径归一到它所属的源码子系统。
+
+    src/repo_snapshot_qa/checks/admission.py -> checks
+    src/repo_snapshot_qa/snapshot.py          -> snapshot
+    tests/test_snapshot.py                    -> test_snapshot
+    """
+    parts = path.replace("\\", "/").split("/")
+    if "src" in parts:
+        idx = parts.index("src")
+        if idx + 2 < len(parts):
+            return parts[idx + 2].removesuffix(".py")
+        if idx + 1 < len(parts):
+            return parts[idx + 1].removesuffix(".py")
+    if "tests" in parts:
+        idx = parts.index("tests")
+        if idx + 1 < len(parts):
+            return parts[idx + 1].removesuffix(".py")
+    return (parts[-1] or "").removesuffix(".py")
+
+
+def _subsystem_counts(commits: list[CommitInfo]) -> Counter:
+    """统计一批提交触及的各源码子系统次数。"""
+    counter: Counter = Counter()
+    for commit in commits:
+        for path in commit.files:
+            counter[_file_subsystem(path)] += 1
+    return counter
 
 
 def check_cohesion(
     milestones: list[Milestone], commits: list[CommitInfo]
 ) -> CheckResult:
-    """聚合性：里程碑内提交主题集中，且标题与说明完整。"""
+    """聚合性：里程碑内提交集中在同一源码子系统，且标题与说明完整。"""
     if not milestones:
         return CheckResult("聚合性", False, 0.0, ["未配置里程碑"])
 
@@ -57,12 +77,13 @@ def check_cohesion(
         if not ms_commits:
             detail_lines.append(f"{milestone.title or '(无标题)'}: 区间无提交")
             continue
-        scopes = [s for s in (_scope_of(c) for c in ms_commits) if s]
-        dominant = max(Counter(scopes).values(), default=0) / len(ms_commits) if scopes else 0.0
+        counter = _subsystem_counts(ms_commits)
+        total = sum(counter.values())
+        dominant = max(counter.values(), default=0) / total if total else 0.0
         ok = desc_ok and dominant >= COHESION_RATIO
         passing += int(ok)
         detail_lines.append(
-            f"{milestone.title}: 主题集中度 {dominant:.0%}"
+            f"{milestone.title}: 文件主题集中度 {dominant:.0%}"
             f"（{'✓ 说明完整' if desc_ok else '✗ 说明不足'}）"
         )
 
