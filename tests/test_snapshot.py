@@ -86,6 +86,19 @@ class SnapshotTest(unittest.TestCase):
         self.assertEqual(data["commit_sha"], "abc123")
         self.assertEqual(data["tree_sha"], "tree123")
 
+    def test_shallow_clone_depth(self) -> None:
+        dest = self.base / "shallow"
+        # 浅克隆对本地裸路径不生效，需用 file:// URI 才能触发 --depth。
+        repo = clone_repo(self.source.as_uri(), dest, depth=1)
+        count = subprocess.run(
+            ["git", "-C", str(repo), "rev-list", "--count", "HEAD"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=True,
+        ).stdout.strip()
+        self.assertEqual(int(count), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
